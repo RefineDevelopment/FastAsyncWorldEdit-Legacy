@@ -18,6 +18,7 @@ import com.sk89q.worldedit.internal.cui.CUIEvent;
 import com.sk89q.worldedit.internal.cui.SelectionPointEvent;
 import com.sk89q.worldedit.internal.cui.SelectionShapeEvent;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -66,7 +67,13 @@ public class StructureCUI extends CUI {
     private int viewDistance() {
         Player player = this.<Player>getPlayer().parent;
         if (Bukkit.getVersion().contains("paper")) {
-            return player.getViewDistance();
+            try {
+                Method method = player.getClass().getMethod("getViewDistance");
+                Object value = method.invoke(player);
+                return value instanceof Number ? ((Number) value).intValue() : Bukkit.getViewDistance();
+            } catch (Throwable ignored) {
+                return Bukkit.getViewDistance();
+            }
         } else {
             return Bukkit.getViewDistance();
         }

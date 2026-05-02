@@ -89,7 +89,7 @@ subprojects {
     targetCompatibility = 1.8
 
     compileJava {
-        options.compilerArgs += ["-parameters"]
+        options.compilerArgs += ["-parameters", "-Xprefer:source"]
     }
 
     repositories {

@@ -15,6 +15,7 @@ import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.world.biome.BaseBiome;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -242,54 +243,59 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
         parent.spawnParticle(particle, location, i, v, v1, v2, v3, t);
     }
 
-    @Override
     public int getEntityCount() {
         return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(Integer value) {
-                this.value = parent.getEntityCount();
+                this.value = invokeIntWorldMethod("getEntityCount", parent.getEntities().size());
             }
         });
     }
 
-    @Override
     public int getTileEntityCount() {
         return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(Integer value) {
-                this.value = parent.getTileEntityCount();
+                this.value = invokeIntWorldMethod("getTileEntityCount", 0);
             }
         });
     }
 
-    @Override
     public int getTickableTileEntityCount() {
         return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(Integer value) {
-                this.value = parent.getTickableTileEntityCount();
+                this.value = invokeIntWorldMethod("getTickableTileEntityCount", 0);
             }
         });
     }
 
-    @Override
     public int getChunkCount() {
         return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(Integer value) {
-                this.value = parent.getChunkCount();
+                this.value = invokeIntWorldMethod("getChunkCount", parent.getLoadedChunks().length);
             }
         });
     }
 
-    @Override
     public int getPlayerCount() {
         return TaskManager.IMP.sync(new RunnableVal<Integer>() {
             @Override
             public void run(Integer value) {
-                this.value = parent.getPlayerCount();
+                this.value = invokeIntWorldMethod("getPlayerCount", parent.getPlayers().size());
             }
         });
+    }
+
+    private int invokeIntWorldMethod(String methodName, int fallback) {
+        try {
+            Method method = parent.getClass().getMethod(methodName);
+            Object value = method.invoke(parent);
+            return value instanceof Number ? ((Number) value).intValue() : fallback;
+        } catch (Throwable ignored) {
+            return fallback;
+        }
     }
 
     @Override
@@ -353,21 +359,6 @@ public class AsyncWorld extends DelegateFaweQueue implements World, HasFaweQueue
     @Override
     public Chunk getChunkAt(Block block) {
         return getChunkAt(block.getX(), block.getZ());
-    }
-
-    @Override
-    public void getChunkAtAsync(int x, int z, ChunkLoadCallback cb) {
-        parent.getChunkAtAsync(x, z, cb);
-    }
-
-    @Override
-    public void getChunkAtAsync(Location location, ChunkLoadCallback cb) {
-        parent.getChunkAtAsync(location, cb);
-    }
-
-    @Override
-    public void getChunkAtAsync(Block block, ChunkLoadCallback cb) {
-        parent.getChunkAtAsync(block, cb);
     }
 
     @Override

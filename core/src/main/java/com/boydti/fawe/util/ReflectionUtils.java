@@ -1,5 +1,8 @@
 package com.boydti.fawe.util;
 
+import sun.reflect.FieldAccessor;
+import sun.reflect.ReflectionFactory;
+
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
@@ -9,10 +12,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
-
-import sun.reflect.ConstructorAccessor;
-import sun.reflect.FieldAccessor;
-import sun.reflect.ReflectionFactory;
 
 /**
  * @author DPOH-VAR
@@ -28,14 +27,13 @@ public class ReflectionUtils {
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName) {
         try {
             return addEnum(enumType, enumName, new Class<?>[]{}, new Object[]{});
-        } catch (Throwable ignore) {
+        } catch (Throwable ignored) {
             return ReflectionUtils9.addEnum(enumType, enumName);
         }
     }
 
 
     public static <T extends Enum<?>> T addEnum(Class<T> enumType, String enumName, Class<?>[] additionalTypes, Object[] additionalValues) {
-
         // 0. Sanity checks
         if (!Enum.class.isAssignableFrom(enumType)) {
             throw new RuntimeException("class " + enumType + " is not an instance of Enum");
@@ -52,7 +50,6 @@ public class ReflectionUtils {
         AccessibleObject.setAccessible(new Field[]{valuesField}, true);
 
         try {
-
             // 2. Copy it
             T[] previousValues = (T[]) valuesField.get(enumType);
             List values = new ArrayList(Arrays.asList(previousValues));
@@ -77,6 +74,11 @@ public class ReflectionUtils {
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
+        } catch (Throwable throwable) {
+            if (additionalTypes.length == 0 && additionalValues.length == 0) {
+                return ReflectionUtils9.addEnum(enumType, enumName);
+            }
+            throw new RuntimeException(throwable.getMessage(), throwable);
         }
     }
 
@@ -102,6 +104,8 @@ public class ReflectionUtils {
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e.getMessage(), e);
+        } catch (Throwable throwable) {
+            ReflectionUtils9.clearEnum(enumType);
         }
     }
 
@@ -109,13 +113,13 @@ public class ReflectionUtils {
                                    Class<?>[] additionalTypes, Object[] additionalValues) throws Exception {
         Object[] parms = new Object[additionalValues.length + 2];
         parms[0] = value;
-        parms[1] = Integer.valueOf(ordinal);
+        parms[1] = ordinal;
         System.arraycopy(additionalValues, 0, parms, 2, additionalValues.length);
-        return enumClass.getConstructor(additionalTypes).newInstance(parms);
+        return getConstructorAccessor(enumClass, additionalTypes).newInstance(parms);
     }
 
-    private static ConstructorAccessor getConstructorAccessor(Class<?> enumClass,
-                                                              Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
+    private static sun.reflect.ConstructorAccessor getConstructorAccessor(Class<?> enumClass,
+                                                                         Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
         Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
         parameterTypes[0] = String.class;
         parameterTypes[1] = int.class;

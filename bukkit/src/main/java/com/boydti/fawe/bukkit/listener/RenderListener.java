@@ -4,6 +4,7 @@ import com.boydti.fawe.Fawe;
 import com.boydti.fawe.config.Settings;
 import com.boydti.fawe.object.FawePlayer;
 import com.boydti.fawe.util.TaskManager;
+import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
@@ -96,7 +97,11 @@ public class RenderListener implements Listener {
                 }
             }
         }
-        player.setViewDistance(value);
+        try {
+            Method method = player.getClass().getMethod("setViewDistance", int.class);
+            method.invoke(player, value);
+        } catch (Throwable ignored) {
+        }
     }
 
     public int getViewDistance(Player player) {
