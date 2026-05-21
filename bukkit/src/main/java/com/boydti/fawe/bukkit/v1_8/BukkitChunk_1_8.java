@@ -248,6 +248,11 @@ public class BukkitChunk_1_8 extends CharFaweChunk<Chunk, BukkitQueue18R3> {
                 }
                 getParent().setCount(0, getParent().getNonEmptyBlockCount(section) + solid, section);
             }
+            // The actual heightmap calculation in FAWE is cooked
+            // It does not properly use the NMS check for ignored heightmap blocks (like barriers!)
+            // Heightmap fucked => light fucked
+            // The easiest fix is just to recalculate height map properly :/
+            getParent().recalculateHeightMap(nmsChunk);
             // Trim tiles
             Iterator<Map.Entry<BlockPosition, TileEntity>> iterator = tiles.entrySet().iterator();
             HashMap<BlockPosition, TileEntity> toRemove = null;

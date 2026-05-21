@@ -77,6 +77,7 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
     protected static Field fieldBiomes2;
     protected static Field fieldGenLayer1;
     protected static Field fieldGenLayer2;
+    protected static Field fieldHeightMapMinimum;
     protected static com.boydti.fawe.bukkit.v1_8.MutableGenLayer genLayer;
     protected static ChunkSection emptySection;
 
@@ -110,6 +111,10 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
         try {
             isDirty = ChunkSection.class.getDeclaredField("isDirty");
             isDirty.setAccessible(true);
+        } catch (Throwable ignore) {}
+        try {
+            fieldHeightMapMinimum = Chunk.class.getDeclaredField("t");
+            fieldHeightMapMinimum.setAccessible(true);
         } catch (Throwable ignore) {}
     }
 
@@ -303,6 +308,45 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
                 }
             }
         }
+    }
+
+    public void recalculateHeightMap(Chunk chunk) {
+        int minHeight = Integer.MAX_VALUE;
+        ChunkSection[] sections = chunk.getSections();
+        int[] heightMap = chunk.heightMap;
+        for (int z = 0; z < 16; z++) {
+            for (int x = 0; x < 16; x++) {
+                int height = 0;
+                for (int sectionIndex = sections.length - 1; sectionIndex >= 0 && height == 0; sectionIndex--) {
+                    ChunkSection section = sections[sectionIndex];
+                    if (section == null) {
+                        continue;
+                    }
+                    char[] blocks = section.getIdArray();
+                    int yBase = sectionIndex << 4;
+                    for (int y = 15; y >= 0; y--) {
+                        int combined = blocks[(y << 8) | (z << 4) | x];
+                        if (combined == 0) {
+                            continue;
+                        }
+                        Block block = Block.getById(combined >> 4);
+                        if (block != null && block.p() != 0) {
+                            height = yBase + y + 1;
+                            break;
+                        }
+                    }
+                }
+                heightMap[(z << 4) | x] = height;
+                if (height < minHeight) {
+                    minHeight = height;
+                }
+            }
+        }
+        try {
+            if (fieldHeightMapMinimum != null) {
+                fieldHeightMapMinimum.set(chunk, minHeight);
+            }
+        } catch (Throwable ignore) {}
     }
 
     @Override
