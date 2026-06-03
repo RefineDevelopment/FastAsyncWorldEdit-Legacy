@@ -1,18 +1,12 @@
 repositories {
     flatDir {dirs 'lib'}
+    maven {url 'https://maven.refinedev.org/public-repo'}
 }
 dependencies {
     compile project(':core')
     compile 'com.sk89q:worldguard:6.0.0-SNAPSHOT'
-    compile('com.destroystokyo.paper:paper-api:1.12-R0.1-SNAPSHOT') {
-        exclude group: 'net.md-5'
-    }
-    compileOnly files('../libs/Craftbukkit_1_12.jar')
-    compileOnly files('../libs/Craftbukkit_1_11.jar')
-    compileOnly files('../libs/Craftbukkit_1_10.jar')
-    compileOnly files('../libs/Craftbukkit_1_9.jar')
-    compileOnly files('../libs/Craftbukkit_1_8.jar')
-    compileOnly files('../libs/Craftbukkit_1_7.jar')
+    compileOnly 'xyz.refinedev.spigot:Carbon-API:1.8.8-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-server:1.8.8-R0.1-SNAPSHOT'
     compile 'com.github.MilkBowl:VaultAPI:1.7'
     compileOnly files('../libs/GriefPrevention.jar')
     compileOnly files('../libs/regios.jar')
