@@ -199,7 +199,7 @@ public class BukkitChunk_1_8 extends CharFaweChunk<Chunk, BukkitQueue18R3> {
                     if (count == countAir) {
                         continue;
                     }
-                    sections[j] = section = new ChunkSection(j << 4, flag, newArray);
+                    sections[j] = new ChunkSection(j << 4, flag, newArray);
                     continue;
                 }
                 if (count >= 4096) {
@@ -207,7 +207,7 @@ public class BukkitChunk_1_8 extends CharFaweChunk<Chunk, BukkitQueue18R3> {
                         sections[j] = null;
                         continue;
                     }
-                    sections[j].a(newArray);
+                    section.a(newArray);
                     continue;
                 }
                 int by = j << 4;

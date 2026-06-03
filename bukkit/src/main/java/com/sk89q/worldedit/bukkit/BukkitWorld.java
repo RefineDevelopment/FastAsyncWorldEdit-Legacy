@@ -87,7 +87,7 @@ public class BukkitWorld extends LocalWorld {
         List<com.sk89q.worldedit.entity.Entity> entities = new ArrayList<com.sk89q.worldedit.entity.Entity>();
         for (Entity ent : ents) {
             if (region.contains(BukkitUtil.toVector(ent.getLocation()))) {
-                addEntities(ent, entities);
+                entities.add(adapt(ent));
             }
         }
         return entities;
@@ -97,48 +97,10 @@ public class BukkitWorld extends LocalWorld {
     public List<com.sk89q.worldedit.entity.Entity> getEntities() {
         List<com.sk89q.worldedit.entity.Entity> list = new ArrayList<com.sk89q.worldedit.entity.Entity>();
         for (Entity entity : getWorld().getEntities()) {
-            addEntities(entity, list);
+            list.add(adapt(entity));
         }
         return list;
     }
-
-    private void addEntities(Entity ent, Collection<com.sk89q.worldedit.entity.Entity> ents) {
-        ents.add(adapt(ent));
-        FaweBukkit.Version version = Fawe.<FaweBukkit>imp().getVersion();
-        switch (version) {
-            case NONE:
-            case v1_7_R4:
-            case v1_8_R3:
-            case v1_9_R2:
-            case v1_10_R1:
-            case v1_11_R1:
-                return;
-            default:
-                if (ent instanceof Player) {
-                    final Player plr = (Player) ent;
-                    com.sk89q.worldedit.entity.Entity left = adapt(((Player) ent).getShoulderEntityLeft());
-                    com.sk89q.worldedit.entity.Entity right = adapt(((Player) ent).getShoulderEntityRight());
-                    if (left != null) {
-                        ents.add(new DelegateEntity(left) {
-                            @Override
-                            public boolean remove() {
-                                plr.setShoulderEntityLeft(null);
-                                return true;
-                            }
-                        });
-                    }
-                    if (right != null) {
-                        ents.add(new DelegateEntity(right) {
-                            @Override
-                            public boolean remove() {
-                                plr.setShoulderEntityRight(null);
-                                return true;
-                            }
-                        });
-                    }
-                }
-        }
-    };
 
     @Nullable
     @Override

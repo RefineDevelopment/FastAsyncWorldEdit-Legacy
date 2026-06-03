@@ -151,7 +151,7 @@ public class BukkitImageViewer implements ImageViewer {
             int slot = getMapSlot(player);
             if (slot == -1) {
                 if (initializing) {
-                    player.getInventory().setItemInMainHand(new ItemStack(Material.MAP));
+                    player.getInventory().setItemInHand(new ItemStack(Material.MAP));
                 } else {
                     return;
                 }

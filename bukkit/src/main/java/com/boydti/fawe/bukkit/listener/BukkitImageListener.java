@@ -99,9 +99,6 @@ public class BukkitImageListener implements Listener {
         Player player = event.getPlayer();
         FawePlayer<Object> fp = FawePlayer.wrap(player);
         if (fp.getMeta("CFISettings") == null) return;
-        try {
-            if (event.getHand() == EquipmentSlot.OFF_HAND) return;
-        } catch (NoSuchFieldError | NoSuchMethodError ignored) {}
 
         List<Block> target = player.getLastTwoTargetBlocks((Set<Material>) null, 100);
         if (target.isEmpty()) return;

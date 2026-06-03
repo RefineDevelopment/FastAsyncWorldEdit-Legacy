@@ -33,6 +33,7 @@ wiki_permissions.md
 *.iml
 /obj
 docs/
+jars/
 
 bukkit/bin/
 core/bin/

@@ -59,7 +59,7 @@ fun Project.computeFaweVersion(): String {
     var date = ""
 
     try {
-        val git = org.ajoberstar.grgit.Grgit.open()
+        val git = org.ajoberstar.grgit.Grgit.open(project.rootDir)
         try {
             val head = git.head()
             date = SimpleDateFormat("yy.MM.dd").format(head.date)
@@ -110,7 +110,8 @@ fun Project.computeFaweVersion(): String {
         } finally {
             git.close()
         }
-    } catch (_: Throwable) {
+    } catch (e: Throwable) {
+        e.printStackTrace()
         revision = "unknown"
     }
 
@@ -119,7 +120,7 @@ fun Project.computeFaweVersion(): String {
 
 group = "com.boydti.fawe"
 description = "FastAsyncWorldEdit"
-version = if (hasProperty("lzNoVersion")) "unknown" else computeFaweVersion()
+version = computeFaweVersion()
 
 idea {
     project {

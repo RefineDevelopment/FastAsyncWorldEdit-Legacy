@@ -207,7 +207,6 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
                         }
                     }
 
-                    long now = System.currentTimeMillis();
                     if (whileLocked != null) whileLocked.run();
                     if (!load) return;
 
@@ -765,12 +764,12 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
     @Override
     public void relightBlock(int x, int y, int z) {
         pos.c(x, y, z);
-        nmsWorld.c(EnumSkyBlock.BLOCK, pos);
+        nmsWorld.updateLight(EnumSkyBlock.BLOCK, pos);
     }
 
     @Override
     public void relightSky(int x, int y, int z) {
         pos.c(x, y, z);
-        nmsWorld.c(EnumSkyBlock.SKY, pos);
+        nmsWorld.updateLight(EnumSkyBlock.SKY, pos);
     }
 }

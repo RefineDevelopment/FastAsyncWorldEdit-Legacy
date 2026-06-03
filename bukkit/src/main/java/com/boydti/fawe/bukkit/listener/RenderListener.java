@@ -97,11 +97,7 @@ public class RenderListener implements Listener {
                 }
             }
         }
-        try {
-            Method method = player.getClass().getMethod("setViewDistance", int.class);
-            method.invoke(player, value);
-        } catch (Throwable ignored) {
-        }
+        player.spigot().setViewDistance(value);
     }
 
     public int getViewDistance(Player player) {
