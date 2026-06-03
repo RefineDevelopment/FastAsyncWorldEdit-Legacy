@@ -1,0 +1,92 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and release plugin
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build plugin
+        run: ./gradlew --no-daemon build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FastAsyncWorldEdit-plugin
+          path: |
+            jars/*.jar
+            jars/*.jar.MD5
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Prepare release metadata
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          artifacts=(jars/*.jar jars/*.jar.MD5)
+          if [ "${#artifacts[@]}" -eq 0 ]; then
+            echo "No release artifacts were found in jars/." >&2
+            exit 1
+          fi
+
+          short_sha="${GITHUB_SHA::7}"
+          tag="build-${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}-${short_sha}"
+          title="FastAsyncWorldEdit build ${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT} (${short_sha})"
+
+          {
+            echo "FastAsyncWorldEdit automated build"
+            echo
+            echo "- Branch: ${GITHUB_REF_NAME}"
+            echo "- Commit: [${short_sha}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/${GITHUB_SHA})"
+            echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "Artifacts:"
+            for artifact in "${artifacts[@]}"; do
+              echo "- $(basename "${artifact}")"
+            done
+          } > release-notes.md
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "title=${title}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_TITLE: ${{ steps.release.outputs.title }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          artifacts=(jars/*.jar jars/*.jar.MD5)
+          gh release create "${RELEASE_TAG}" "${artifacts[@]}" \
+            --target "${GITHUB_SHA}" \
+            --title "${RELEASE_TITLE}" \
+            --notes-file release-notes.md
