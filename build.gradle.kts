@@ -6,6 +6,8 @@ import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.external.javadoc.StandardJavadocDocletOptions
+import org.jetbrains.gradle.ext.runConfigurations
+import org.jetbrains.gradle.ext.settings
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -28,6 +30,7 @@ buildscript {
 
 plugins {
     java
+    id("org.jetbrains.gradle.plugin.idea-ext") version "1.4.1"
 }
 
 fun RepositoryHandler.faweRepositories() {
@@ -118,10 +121,16 @@ group = "com.boydti.fawe"
 description = "FastAsyncWorldEdit"
 version = if (hasProperty("lzNoVersion")) "unknown" else computeFaweVersion()
 
-tasks.register("setupCIWorkspace")
-
-tasks.named<Delete>("clean") {
-    delete("target")
+idea {
+    project {
+        settings {
+            runConfigurations {
+                create<org.jetbrains.gradle.ext.Gradle>("Build") {
+                    taskNames = listOf("build")
+                }
+            }
+        }
+    }
 }
 
 subprojects {
