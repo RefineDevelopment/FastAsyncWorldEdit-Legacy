@@ -276,9 +276,38 @@ public class BukkitChunk_1_8 extends CharFaweChunk<Chunk, BukkitQueue18R3> {
                 }
             }
             if (toRemove != null) {
+                Map<Short, CompoundTag> incomingTiles = this.getTiles();
                 for (Map.Entry<BlockPosition, TileEntity> entry : toRemove.entrySet()) {
                     BlockPosition bp = entry.getKey();
                     TileEntity tile = entry.getValue();
+                    int lx = bp.getX() & 15;
+                    int ly = bp.getY();
+                    int lz = bp.getZ() & 15;
+                    int j = FaweCache.CACHE_I[ly][lz][lx];
+                    int k = FaweCache.CACHE_J[ly][lz][lx];
+                    char[] array = this.getIdArray(j);
+                    char combined = array != null ? array[k] : 0;
+                    int newId = combined >> 4;
+                    short hash = MathMan.tripleBlockCoord(bp.getX(), bp.getY(), bp.getZ());
+                    // Only keep existing TE when the new block produces the same TE class.
+                    // Otherwise the set-tiles step would load NBT for the new block into a stale
+                    // TE of the wrong type (e.g. chest tag into TileEntityCommand).
+                    // Same-class case avoids the deferred-removal hazard for ticking TEs
+                    // (hopper/furnace) where world.t(bp) only flags the TE and the next world
+                    // tick removes the freshly-created replacement by position.
+                    boolean replacing = false;
+                    if (incomingTiles.containsKey(hash) && newId > 0) {
+                        Block newBlock = Block.getById(newId);
+                        if (newBlock instanceof IContainer) {
+                            TileEntity fresh = ((IContainer) newBlock).a(nmsWorld, combined & 15);
+                            if (fresh != null && fresh.getClass() == tile.getClass()) {
+                                replacing = true;
+                            }
+                        }
+                    }
+                    if (replacing) {
+                        continue;
+                    }
                     tiles.remove(bp);
                     nmsWorld.t(bp);
                     tile.y();
