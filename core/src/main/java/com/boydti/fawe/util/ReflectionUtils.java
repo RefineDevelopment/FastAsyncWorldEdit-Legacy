@@ -1,8 +1,5 @@
 package com.boydti.fawe.util;
 
-import sun.reflect.FieldAccessor;
-import sun.reflect.ReflectionFactory;
-
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Array;
@@ -118,15 +115,14 @@ public class ReflectionUtils {
         return getConstructorAccessor(enumClass, additionalTypes).newInstance(parms);
     }
 
-    private static sun.reflect.ConstructorAccessor getConstructorAccessor(Class<?> enumClass,
-                                                                         Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
+    private static Constructor getConstructorAccessor(Class<?> enumClass, Class<?>[] additionalParameterTypes) throws NoSuchMethodException {
         Class<?>[] parameterTypes = new Class[additionalParameterTypes.length + 2];
         parameterTypes[0] = String.class;
-        parameterTypes[1] = int.class;
-        System.arraycopy(additionalParameterTypes, 0,
-                parameterTypes, 2, additionalParameterTypes.length);
-        return ReflectionFactory.getReflectionFactory().newConstructorAccessor(enumClass.getDeclaredConstructor(parameterTypes));
+        parameterTypes[1] = Integer.TYPE;
+        System.arraycopy(additionalParameterTypes, 0, parameterTypes, 2, additionalParameterTypes.length);
+        return enumClass.getDeclaredConstructor(parameterTypes);
     }
+
 
     public static void setFailsafeFieldValue(Field field, Object target, Object value)
             throws NoSuchFieldException, IllegalAccessException {
@@ -151,12 +147,7 @@ public class ReflectionUtils {
             }
         }
 
-        try {
-            FieldAccessor fa = ReflectionFactory.getReflectionFactory().newFieldAccessor(field, false);
-            fa.set(target, value);
-        } catch (NoSuchMethodError error) {
-            field.set(target, value);
-        }
+        field.set(target, value);
     }
 
     private static void blankField(Class<?> enumClass, String fieldName)
