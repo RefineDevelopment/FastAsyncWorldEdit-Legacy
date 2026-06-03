@@ -3,6 +3,7 @@ package com.boydti.fawe.bukkit.v1_8;
 import com.boydti.fawe.FaweCache;
 import com.boydti.fawe.bukkit.v0.BukkitQueue_0;
 import com.boydti.fawe.example.CharFaweChunk;
+import com.boydti.fawe.example.RelightDelegate;
 import com.boydti.fawe.object.FaweChunk;
 import com.boydti.fawe.object.RegionWrapper;
 import com.boydti.fawe.object.RunnableVal;
@@ -36,7 +37,6 @@ import net.minecraft.server.v1_8_R3.EntitySlice;
 import net.minecraft.server.v1_8_R3.EntityTracker;
 import net.minecraft.server.v1_8_R3.EntityTypes;
 import net.minecraft.server.v1_8_R3.EnumDifficulty;
-import net.minecraft.server.v1_8_R3.EnumSkyBlock;
 import net.minecraft.server.v1_8_R3.IChunkProvider;
 import net.minecraft.server.v1_8_R3.LongHashMap;
 import net.minecraft.server.v1_8_R3.MinecraftServer;
@@ -80,6 +80,7 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
     protected static Field fieldHeightMapMinimum;
     protected static com.boydti.fawe.bukkit.v1_8.MutableGenLayer genLayer;
     protected static ChunkSection emptySection;
+    private final RelightDelegate relightDelegate = new BukkitLightEngine18(this);
 
     static {
         try {
@@ -763,13 +764,16 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
 
     @Override
     public void relightBlock(int x, int y, int z) {
-        pos.c(x, y, z);
-        nmsWorld.updateLight(EnumSkyBlock.BLOCK, pos);
+        relightDelegate.relightBlock(x, y, z);
     }
 
     @Override
     public void relightSky(int x, int y, int z) {
-        pos.c(x, y, z);
-        nmsWorld.updateLight(EnumSkyBlock.SKY, pos);
+        relightDelegate.relightSky(x, y, z);
+    }
+
+    @Override
+    public RelightDelegate getRelightDelegate() {
+        return relightDelegate;
     }
 }
