@@ -476,15 +476,6 @@ public class FaweBukkit implements IFawe, Listener {
                 MainUtil.handleError(e);
             }
         }
-        final Plugin townyPlugin = Bukkit.getServer().getPluginManager().getPlugin("Towny");
-        if ((townyPlugin != null) && townyPlugin.isEnabled()) {
-            try {
-                managers.add(new TownyFeature(townyPlugin, this));
-                Fawe.debug("Plugin 'Towny' found. Using it now.");
-            } catch (final Throwable e) {
-                MainUtil.handleError(e);
-            }
-        }
         final Plugin residencePlugin = Bukkit.getServer().getPluginManager().getPlugin("Residence");
         if ((residencePlugin != null) && residencePlugin.isEnabled()) {
             try {
