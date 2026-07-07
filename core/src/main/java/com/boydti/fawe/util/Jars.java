@@ -9,7 +9,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public enum Jars {
-    WE_B_6_1_7_2("https://addons.cursecdn.com/files/2431/372/worldedit-bukkit-6.1.7.2.jar",
+    WE_B_6_1_7_2("https://mediafilez.forgecdn.net/files/2431/372/worldedit-bukkit-6.1.7.2.jar",
             "CRVJCWGJJ6UK40CTGHXQVK2/3C9BBTOS25FWI0ZHD4S=", 1726340),
 
     VS_B_5_171_0("https://media.forgecdn.net/files/2488/589/VoxelSniper-5.172.0-SNAPSHOT.jar",
