@@ -28,6 +28,7 @@ public class NMSRelighter implements Relighter {
 
     private static final int DISPATCH_SIZE = 64;
     private static final int CHUNK_PACKET_MASK = 65535;
+    private static final int RETRY_DELAY_TICKS = 1;
 
     private final NMSMappedFaweQueue queue;
     private final Map<Long, RelightChunk> chunksToRelight;
@@ -36,6 +37,7 @@ public class NMSRelighter implements Relighter {
     private final Map<Long, long[][][]> blockLightQueue;
     private final ConcurrentHashMap<Long, long[][][]> concurrentBlockLightQueue;
     private final AtomicBoolean blockLightQueueLock = new AtomicBoolean(false);
+    private final AtomicBoolean retryScheduled = new AtomicBoolean(false);
     private final int maxY;
 
     public NMSRelighter(NMSMappedFaweQueue queue) {
@@ -127,6 +129,9 @@ public class NMSRelighter implements Relighter {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+        if (!isEmpty()) {
+            scheduleRetry(sky);
+        }
     }
 
     @Override
@@ -214,6 +219,7 @@ public class NMSRelighter implements Relighter {
                 if (sections != null) {
                     queue.removeLighting(sections, FaweQueue.RelightMode.ALL, sky);
                 }
+                queuedChunks.add(chunk);
             }
             rememberChunkAndNeighbors(chunk.x, chunk.z);
         }
@@ -260,7 +266,9 @@ public class NMSRelighter implements Relighter {
                 int bit = Long.numberOfTrailingZeros(bits);
                 int y = (word << 6) + bit;
                 if (y <= maxY) {
-                    delegate.relightBlock(x, y, z);
+                    if (!delegate.relightBlock(x, y, z)) {
+                        addLightUpdate(x, y, z);
+                    }
                 }
                 bits &= bits - 1;
             }
@@ -281,6 +289,24 @@ public class NMSRelighter implements Relighter {
             }
         }
         concurrentBlockLightQueue.clear();
+    }
+
+    /**
+     * Retry relight work that requires chunks outside the currently loaded
+     * neighborhood. This mirrors Paper's deferred light-update behavior while
+     * preventing the queue lifecycle from discarding the pending update.
+     */
+    private void scheduleRetry(final boolean sky) {
+        if (!retryScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        TaskManager.IMP.laterAsync(new Runnable() {
+            @Override
+            public void run() {
+                retryScheduled.set(false);
+                fixLightingSafe(sky);
+            }
+        }, RETRY_DELAY_TICKS);
     }
 
     private void mergeBlockBits(long[][][] target, long[][][] source) {

@@ -35,27 +35,18 @@ final class BukkitLightEngine18 implements RelightDelegate {
             return false;
         }
 
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dz = -1; dz <= 1; dz++) {
-                queue.loadChunk(world, cx + dx, cz + dz, true);
-            }
-        }
-
         Chunk chunk = queue.getCachedChunk(world, cx, cz);
-        if (chunk == null) {
-            chunk = queue.loadChunk(world, cx, cz, true);
-        }
         return chunk != null && rebuilder.rebuild((WorldServer) chunk.getWorld(), chunk, scope);
     }
 
     @Override
-    public synchronized void relightBlock(int x, int y, int z) {
-        propagator.propagate(queue, LightChannel.BLOCK, x, y, z);
+    public synchronized boolean relightBlock(int x, int y, int z) {
+        return propagator.propagate(queue, LightChannel.BLOCK, x, y, z);
     }
 
     @Override
-    public synchronized void relightSky(int x, int y, int z) {
-        propagator.propagate(queue, LightChannel.SKY, x, y, z);
+    public synchronized boolean relightSky(int x, int y, int z) {
+        return propagator.propagate(queue, LightChannel.SKY, x, y, z);
     }
 
     /**
@@ -326,52 +317,48 @@ final class BukkitLightEngine18 implements RelightDelegate {
         private int originZ;
         private int tail;
 
-        private void propagate(BukkitQueue18R3 queue, LightChannel channel, int x, int y, int z) {
+        private boolean propagate(BukkitQueue18R3 queue, LightChannel channel, int x, int y, int z) {
             if (y < 0 || y >= PaddedLightVolume.HEIGHT) {
-                return;
+                return true;
             }
 
             World bukkitWorld = queue.getWorld();
             if (bukkitWorld == null) {
-                return;
+                return false;
             }
 
             int centerChunkX = x >> 4;
             int centerChunkZ = z >> 4;
-            loadWindow(queue, bukkitWorld, centerChunkX, centerChunkZ);
-
             Chunk center = queue.getCachedChunk(bukkitWorld, centerChunkX, centerChunkZ);
-            if (center == null) {
+            if (center == null || !center.areNeighborsLoaded(PropagationWindow.RADIUS)) {
                 window.clear();
-                return;
+                return false;
             }
 
             WorldServer world = (WorldServer) center.getWorld();
             if (channel == LightChannel.SKY && world.worldProvider.o()) {
                 window.clear();
-                return;
+                return true;
             }
 
             window.capture(world, centerChunkX, centerChunkZ);
+            if (!window.isComplete()) {
+                window.clear();
+                return false;
+            }
+
             originX = x;
             originY = y;
             originZ = z;
             seed(channel, x, y, z);
             if (tail == 0) {
                 window.clear();
-                return;
+                return true;
             }
 
             drain(channel);
             window.clear();
-        }
-
-        private void loadWindow(BukkitQueue18R3 queue, World world, int centerChunkX, int centerChunkZ) {
-            for (int dx = -PropagationWindow.RADIUS; dx <= PropagationWindow.RADIUS; dx++) {
-                for (int dz = -PropagationWindow.RADIUS; dz <= PropagationWindow.RADIUS; dz++) {
-                    queue.loadChunk(world, centerChunkX + dx, centerChunkZ + dz, true);
-                }
-            }
+            return true;
         }
 
         private int seed(LightChannel channel, int x, int y, int z) {
@@ -800,6 +787,15 @@ final class BukkitLightEngine18 implements RelightDelegate {
 
         private boolean isNether() {
             return nether;
+        }
+
+        private boolean isComplete() {
+            for (Chunk chunk : chunks) {
+                if (chunk == null) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void clear() {

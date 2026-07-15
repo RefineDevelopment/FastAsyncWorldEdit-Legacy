@@ -16,11 +16,13 @@ public interface RelightDelegate {
         }
 
         @Override
-        public void relightBlock(int x, int y, int z) {
+        public boolean relightBlock(int x, int y, int z) {
+            return false;
         }
 
         @Override
-        public void relightSky(int x, int y, int z) {
+        public boolean relightSky(int x, int y, int z) {
+            return false;
         }
     };
 
@@ -40,8 +42,10 @@ public interface RelightDelegate {
      * @param x block X
      * @param y block Y
      * @param z block Z
+     * @return true when the update was applied, false when its loaded chunk
+     *     neighborhood is not ready and the caller should retry it later
      */
-    void relightBlock(int x, int y, int z);
+    boolean relightBlock(int x, int y, int z);
 
     /**
      * Update sky light after one changed block.
@@ -49,8 +53,10 @@ public interface RelightDelegate {
      * @param x block X
      * @param y block Y
      * @param z block Z
+     * @return true when the update was applied, false when its loaded chunk
+     *     neighborhood is not ready and the caller should retry it later
      */
-    void relightSky(int x, int y, int z);
+    boolean relightSky(int x, int y, int z);
 
     /**
      * Channels that can be rebuilt by a relight delegate.
