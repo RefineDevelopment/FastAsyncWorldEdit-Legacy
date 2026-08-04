@@ -156,16 +156,6 @@ public abstract class NMSMappedFaweQueue<WORLD, CHUNK, CHUNKSECTION, SECTION> ex
     public void saveChunk(CHUNK chunk) {
     }
 
-    public abstract void relight(int x, int y, int z);
-
-    public abstract void relightBlock(int x, int y, int z);
-
-    public abstract void relightSky(int x, int y, int z);
-
-    public RelightDelegate getRelightDelegate() {
-        return RelightDelegate.NONE;
-    }
-
     public void setSkyLight(int x, int y, int z, int value) {
         int cx = x >> 4;
         int cz = z >> 4;
