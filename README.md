@@ -12,8 +12,7 @@ that old 1.8 server stacks expect.
 
 - Forked from legacy FAWE and scoped to the Paper 1.8 line.
 - Reworked the Gradle build into the current Kotlin DSL project layout.
-- Rewritten the relight implementation for the 1.8 NMS queue, including the
-  version-specific lighting delegate used by FAWE's generic relight scheduler.
+- Carbon Light Engine hook support to always have correct lighting with Carbon.
 - Fixed TileEntity corruption (Credits: Gabik21)
 - Fixed Height Map calculation (Credits: Beanes)
 - Builds a shaded Bukkit plugin jar from the `bukkit` module.
