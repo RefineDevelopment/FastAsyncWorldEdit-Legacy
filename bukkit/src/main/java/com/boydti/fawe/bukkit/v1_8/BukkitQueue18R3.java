@@ -2,6 +2,7 @@ package com.boydti.fawe.bukkit.v1_8;
 
 import com.boydti.fawe.FaweCache;
 import com.boydti.fawe.bukkit.v0.BukkitQueue_0;
+import com.boydti.fawe.example.CarbonLightingEngine;
 import com.boydti.fawe.example.CharFaweChunk;
 import com.boydti.fawe.object.FaweChunk;
 import com.boydti.fawe.object.RegionWrapper;
@@ -681,12 +682,6 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
         });
     }
 
-    @Override
-    public void relight(int x, int y, int z) {
-        pos.c(x, y, z);
-        nmsWorld.x(pos);
-    }
-
     private WorldServer nmsWorld;
 
     @Override
@@ -759,6 +754,12 @@ public class BukkitQueue18R3 extends BukkitQueue_0<net.minecraft.server.v1_8_R3.
         }
         Block block = Block.getById(FaweCache.getId(combined));
         return MathMan.pair16(block.p(), block.r());
+    }
+
+    @Override
+    public void relight(int x, int y, int z) {
+        pos.c(x, y, z);
+        nmsWorld.x(pos);
     }
 
     @Override

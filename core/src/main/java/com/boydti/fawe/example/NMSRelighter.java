@@ -282,6 +282,11 @@ public class NMSRelighter implements Relighter {
     public void fixLightingSafe(boolean sky) {
         if (isEmpty()) return;
         try {
+            if (CarbonLightingEngine.isAvailable()) {
+                fixLightingWithSpigotHook();
+                sendChunks();
+                return;
+            }
             if (sky) {
                 fixSkyLighting();
             } else {
@@ -290,7 +295,9 @@ public class NMSRelighter implements Relighter {
                     Iterator<Map.Entry<Long, RelightSkyEntry>> iter = map.entrySet().iterator();
                     while (iter.hasNext()) {
                         Map.Entry<Long, RelightSkyEntry> entry = iter.next();
-                        chunksToSend.put(entry.getKey(), entry.getValue().bitmask);
+                        RelightSkyEntry chunk = entry.getValue();
+                        relightWithSpigotHook(chunk);
+                        chunksToSend.put(entry.getKey(), chunk.bitmask);
                         iter.remove();
                     }
                 }
@@ -300,6 +307,57 @@ public class NMSRelighter implements Relighter {
         } catch (Throwable e) {
             e.printStackTrace();
         }
+    }
+
+    private synchronized void fixLightingWithSpigotHook() {
+        Map<Long, RelightSkyEntry> map = getSkyMap();
+        Iterator<Map.Entry<Long, RelightSkyEntry>> iter = map.entrySet().iterator();
+        int size = SPIGOT_HOOK_DISPATCH_SIZE;
+        while (iter.hasNext() && size-- > 0) {
+            Map.Entry<Long, RelightSkyEntry> entry = iter.next();
+            RelightSkyEntry chunk = entry.getValue();
+            relightWithSpigotHook(chunk);
+            chunksToSend.put(entry.getKey(), chunk.bitmask);
+            iter.remove();
+        }
+        if (map.isEmpty()) {
+            clearBlockLightQueues();
+        }
+    }
+
+    private void clearBlockLightQueues() {
+        synchronized (lightQueue) {
+            while (!lightLock.compareAndSet(false, true));
+            try {
+                lightQueue.clear();
+            } finally {
+                lightLock.set(false);
+            }
+        }
+        concurrentLightQueue.clear();
+    }
+
+    public void fixLightingLater(final boolean sky) {
+        if (!CarbonLightingEngine.isAvailable() || !scheduledRelight.compareAndSet(false, true)) {
+            return;
+        }
+        TaskManager.IMP.later(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    fixLightingSafe(sky);
+                } finally {
+                    scheduledRelight.set(false);
+                }
+                if (!isEmpty()) {
+                    fixLightingLater(sky);
+                }
+            }
+        }, 1);
+    }
+
+    private boolean relightWithSpigotHook(RelightSkyEntry chunk) {
+        return CarbonLightingEngine.relightChunk(queue, chunk.x, chunk.z);
     }
 
     public void fixBlockLighting() {
@@ -343,6 +401,20 @@ public class NMSRelighter implements Relighter {
     public synchronized void fixSkyLighting() {
         // Order chunks
         Map<Long, RelightSkyEntry> map = getSkyMap();
+        // Carbon start
+        if (CarbonLightingEngine.isAvailable()) {
+            Iterator<Map.Entry<Long, RelightSkyEntry>> hookIter = map.entrySet().iterator();
+            int size = SPIGOT_HOOK_DISPATCH_SIZE;
+            while (hookIter.hasNext() && size-- > 0) {
+                Map.Entry<Long, RelightSkyEntry> entry = hookIter.next();
+                RelightSkyEntry chunk = entry.getValue();
+                relightWithSpigotHook(chunk);
+                chunksToSend.put(entry.getKey(), chunk.bitmask);
+                hookIter.remove();
+            }
+            return;
+        }
+        // Carbon end
         ArrayList<RelightSkyEntry> chunksList = new ArrayList<>(map.size());
         Iterator<Map.Entry<Long, RelightSkyEntry>> iter = map.entrySet().iterator();
         while (iter.hasNext()) {

@@ -412,6 +412,7 @@ public class FaweBukkit implements IFawe, Listener {
             }
             Throwable error = null;
             try {
+                Fawe.debug("Loading v1_8_R3 NMS Mapped Queue.");
                 return getQueue(world);
             } catch (Throwable ignore) {
                 error = ignore;

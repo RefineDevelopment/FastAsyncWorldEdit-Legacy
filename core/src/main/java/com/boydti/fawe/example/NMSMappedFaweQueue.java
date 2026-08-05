@@ -112,6 +112,13 @@ public abstract class NMSMappedFaweQueue<WORLD, CHUNK, CHUNKSECTION, SECTION> ex
 
     public abstract void setFullbright(CHUNKSECTION sections);
 
+    public abstract void relight(int x, int y, int z);
+
+    public abstract void relightBlock(int x, int y, int z);
+
+    public abstract void relightSky(int x, int y, int z);
+
+
     public boolean removeLighting(CHUNKSECTION sections, RelightMode mode, boolean hasSky) {
         boolean result = false;
         for (int i = 0; i < 16; i++) {
